@@ -70,13 +70,19 @@ class TMC2240Stepper {
 
 		uint8_t IFCNT();
 
-		// W: SLAVECONF
-		void SLAVECONF(uint16_t input);
-		uint16_t SLAVECONF();
+		// W: NODECONF
+		void NODECONF(uint16_t input);
+		uint16_t NODECONF();
+		// Alias for parity with others
+		uint16_t SLAVECONF() { return NODECONF(); }
+		void SLAVECONF(uint16_t input) { NODECONF(input); }
+
 		void senddelay(uint8_t B);
 		uint8_t senddelay();
-		void slaveaddr(uint8_t B);
-		uint8_t slaveaddr();
+		void nodeaddr(uint8_t B);
+		uint8_t nodeaddr();
+		void slaveaddr(uint8_t B) { nodeaddr(B); }
+		uint8_t slaveaddr() { return nodeaddr(); }
 
 		// R: IOIN
 		uint32_t IOIN();
@@ -274,34 +280,46 @@ class TMC2240Stepper {
 		uint32_t SG4_RESULT();
 		uint16_t sg4_result();
 
+		// RW: ADC_VSUPPLY_AIN
+		uint32_t ADC_VSUPPLY_AIN();
+
+		// RW: ADC_TEMP
+		uint32_t ADC_TEMP();
+
+		// RW: OTW_OV_VTH
+		uint32_t OTW_OV_VTH();
+		void OTW_OV_VTH(uint32_t input);
+		float get_ain_voltage();       // AIN × 305.2 µV
+		float get_vsupply_voltage();   // VSUPPLY × 9.732 mV
+		float get_chip_temperature();  // (ADC_TEMP - 2038) / 7.7
+		float get_overtemp_prewarn_celsius();
+		void set_overtemp_prewarn_celsius(float tempC);
+		float get_overvoltage_threshold_voltage();
+		void set_overvoltage_threshold_voltage(float volts);
+
 		uint8_t status_response;
 
 	protected:
-		INIT2240_REGISTER(GCONF);			// 16b
-		INIT2240_REGISTER(GSTAT);			// 8b
-		INIT2240_REGISTER(TPOWERDOWN);		// 8b
-		INIT2240_REGISTER(SLAVECONF);		// 16b
-		INIT2240_REGISTER(IOIN);			// 32b
-		INIT2240_REGISTER(DRV_CONF);		// 32b
-		INIT2240_REGISTER(DRV_STATUS);		// 32b
-		INIT2240_REGISTER(GLOBAL_SCALER);	// 8b
-		INIT2240_REGISTER(IHOLD_IRUN);		// 32b
-		INIT2240_REGISTER(TSTEP);			// 32b
-		INIT2240_REGISTER(TPWMTHRS);		// 32b
-		INIT2240_REGISTER(TCOOLTHRS);		// 32b
-		INIT2240_REGISTER(THIGH);			// 32b
-		INIT2240_REGISTER(CHOPCONF);		// 32b
-		INIT2240_REGISTER(COOLCONF);		// 32b
-		INIT2240_REGISTER(PWMCONF);			// 32b
-		INIT2240_REGISTER(PWM_SCALE);		// 32b
-		INIT2240_REGISTER(PWM_AUTO);		// 32b
-		INIT2240_REGISTER(SG4_THRS);		// 32b
-		INIT2240_REGISTER(SG4_RESULT);		// 32b
-		//INIT2240_REGISTER(SG4_IND);
+		INIT2240_REGISTER(GCONF);			// 4
+		INIT2240_REGISTER(GSTAT);			// 1
+		INIT2240_REGISTER(NODECONF);		// 2
+		INIT2240_REGISTER(DRV_CONF);		// 1
+		INIT2240_REGISTER(GLOBAL_SCALER);	// 1
+		INIT2240_REGISTER(IHOLD_IRUN);		// 4
+		INIT2240_REGISTER(TPOWERDOWN);		// 1
+		INIT2240_REGISTER(TPWMTHRS);		// 4
+		INIT2240_REGISTER(TCOOLTHRS);		// 4
+		INIT2240_REGISTER(THIGH);			// 4
+		INIT2240_REGISTER(CHOPCONF);		// 4
+		INIT2240_REGISTER(COOLCONF);		// 4
+		INIT2240_REGISTER(PWMCONF);			// 4
+		INIT2240_REGISTER(SG4_THRS);		// 4
+		INIT2240_REGISTER(OTW_OV_VTH);		// 4
+											// (46 Bytes)
 
-		struct IFCNT_t 		{ constexpr static uint8_t address = 0x02; };
-		struct TSTEP_t 		{ constexpr static uint8_t address = 0x12; };
-		struct MSCNT_t 		{ constexpr static uint8_t address = 0x6A; };
+		struct IFCNT_t { constexpr static uint8_t address = 0x02; };
+		struct TSTEP_t { constexpr static uint8_t address = 0x12; };
+		struct MSCNT_t { constexpr static uint8_t address = 0x6A; };
 
 		float 		calc_IFS_current_RMS();
 		uint32_t	set_globalscaler(float current, float IFS_current_RMS);
